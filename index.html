@@ -330,6 +330,19 @@ table.matrix th, table.matrix td { vertical-align: top; }
 .ps-bar-wrap { flex: 1; min-width: 180px; background: var(--border); border-radius: 10px; height: 8px; }
 .ps-bar { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--c3), var(--acc)); transition: width 0.4s; width: 0%; }
 .ps-count { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--c2); white-space: nowrap; }
+.ps-reset-btn {
+  background: none;
+  border: 1.5px solid #dce6ee;
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-family: 'Geologica', sans-serif;
+  font-size: 0.78rem; font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+}
+.ps-reset-btn:hover { border-color: var(--acc2); color: var(--acc2); background: #fff5f5; }
 
 /* Funnel stage cards */
 .funnel-viz {
@@ -459,6 +472,7 @@ tbody tr:nth-child(8) { animation-delay: 0.40s; }
     <span class="ps-label">Общий прогресс задач:</span>
     <div class="ps-bar-wrap"><div class="ps-bar" id="psBar"></div></div>
     <span class="ps-count" id="psCount">0 / 0</span>
+    <button class="ps-reset-btn" onclick="resetAll()">🔄 Сбросить прогресс</button>
   </div>
 
   <!-- Funnel stage visualization -->
@@ -573,7 +587,7 @@ const MATRIX = {
         { name: 'Стоимость привлечения посетителя', formula: 'Бюджет / Кол-во посетителей', desc: 'Считаем по каждому каналу отдельно, сравниваем для перераспределения бюджета.' },
         { name: 'Доля нового трафика', formula: 'Новые / Все × 100%', desc: 'Нормальный показатель — 75–90% новых для growth-стадии, 60-75% для зрелой стадии.' },
         { name: 'Охват по каналам (Channel Mix)', formula: 'Трафик канала / Общий трафик × 100%', desc: 'Метрика → Источники → Сводка. Цель — диверсификация: ни один канал не должен давать >60% трафика, иначе бизнес уязвим.' },
-        { name: 'CTR рекламных объявлений', formula: 'Клики / Показы × 100%', desc: 'Директ/Google Ads → статистика кампаний. Норма для поиска: 3–10%, для РСЯ/КМС: 0.3–1%. Низкий CTR = проблема с заголовком или нерелевантная аудитория.' },
+        { name: 'CTR рекламных объявлений', formula: 'Клики / Показы × 100%', desc: 'Директ/Google Ads → статистика кампаний. Норма для поиска: 5–15%, для РСЯ/КМС: 0.3–1%. Низкий CTR = проблема с заголовком или нерелевантная аудитория.' },
       ]
     },
     {
@@ -599,8 +613,8 @@ const MATRIX = {
         { name: 'Показатель отказов', formula: 'Отказы / Визиты × 100%', desc: 'Норма зависит от типа сайта: лендинг — до 30% по ЯМ, многостраничный — до 20%.' },
         { name: 'Глубина просмотра', formula: 'Σ страниц / Визиты', desc: 'Рост глубины = пользователь исследует сайт. Целевой показатель: ≥ 2 стр.' },
         { name: 'Время на сайте', formula: 'Среднее время сессии', desc: 'Метрика → Поведение → Время на сайте. Норма для B2B: 2–3 минуты.' },
-        { name: 'PageSpeed Score', formula: 'Балл Google PageSpeed Insights (0–100)', desc: 'PageSpeed Insights / GTmetrix. Мобильный балл ≥ 50 — базовый порог, ≥ 70 — хорошо. Каждые +10 баллов снижают показатель отказов на ~5–8%.' },
-        { name: 'Скорость первого контентного рендера (FCP)', formula: 'Время до появления первого элемента на экране', desc: 'Chrome DevTools → Lighthouse. Норма: FCP ≤ 2 с — хорошо, 2–3 с — требует улучшений, >3 с — критично для мобильных.' },
+        { name: 'PageSpeed Score', formula: 'Балл Google PageSpeed Insights (0–100)', desc: 'PageSpeed Insights / GTmetrix. Мобильный балл ≥ 60 — базовый порог, ≥ 80 — хорошо. Каждые +10 баллов снижают показатель отказов на ~5–8%.' },
+        { name: 'Скорость первого контентного рендера (FCP)', formula: 'Время до появления первого элемента на экране', desc: 'Chrome DevTools → Lighthouse. Норма: FCP ≤ 1.8 с — хорошо, 1.8–3 с — требует улучшений, >3 с — критично для мобильных.' },
       ]
     },
     {
@@ -654,7 +668,7 @@ const MATRIX = {
         { name: 'Выпадения из воронки', formula: '1 − (Следующий шаг / Текущий шаг)', desc: 'Метрика → Воронки. Находим шаг с наибольшим оттоком — туда идёт приоритет работы.' },
         { name: 'Средний чек', formula: 'Выручка / Кол-во заказов', desc: 'Считаем в разрезе источника трафика для понимания качества аудитории.' },
         { name: 'Micro-конверсии (вовлечение)', formula: 'Кол-во целевых действий (просмотр цен, скачивание КП, клик на телефон) / Визиты × 100%', desc: 'Настраиваем составные цели в Метрике/GTM. Рост micro-конверсий при стабильной macro-конверсии = воронка работает, но последний шаг тормозит.' },
-        { name: 'ROAS (возврат на рекламные расходы)', formula: 'Выручка от рекламы / Рекламный бюджет × 100%', desc: 'Считаем в разрезе каждой кампании. Норма для e-commerce: ROAS ≥ 200%. Ниже — кампания убыточна и требует оптимизации ставок или аудиторий.' },
+        { name: 'ROAS (возврат на рекламные расходы)', formula: 'Выручка от рекламы / Рекламный бюджет × 100%', desc: 'Считаем в разрезе каждой кампании. Норма для e-commerce: ROAS ≥ 300–400%. Ниже — кампания убыточна и требует оптимизации ставок или аудиторий.' },
       ]
     },
     {
@@ -678,10 +692,10 @@ const MATRIX = {
       tools: ['Яндекс.Касса','Stripe','Robokassa','Calltouch','Google Tag Manager','Метрика E-commerce'],
       metrics: [
         { name: 'Конверсия в покупку', formula: 'Покупки / Уникальные посетители × 100%', desc: 'Основная метрика. Средняя по рунету — 1–3% для интернет-магазинов.' },
-        { name: 'Конверсия checkout (перехода от корзины к оплате)', formula: 'Завершённые заказы / Начатые оформления × 100%', desc: 'Норма ≥ 60%. Ниже — проблема с формой или способами оплаты.' },
+        { name: 'Конверсия checkout', formula: 'Завершённые заказы / Начатые оформления × 100%', desc: 'Норма ≥ 60%. Ниже — проблема с формой или способами оплаты.' },
         { name: 'Revenue per Visitor', formula: 'Выручка / Уникальные посетители', desc: 'Позволяет сравнивать периоды и каналы без привязки к объёму трафика.' },
-        { name: 'Процент брошенных корзин', formula: 'Корзин без оформления / Всего добавлений в корзину × 100%', desc: 'Метрика E-commerce → Воронка заказов. Средний показатель по рынку: 70–80%. Каждые -5% брошенных корзин = ощутимый рост выручки без увеличения трафика.' },
-        { name: 'Время до конверсии', formula: 'Среднее время от первого визита до оформления заказа', desc: 'Метрика → Конверсии → Время до конверсии. Если >7 дней — добавить ремаркетинг.' },
+        { name: 'Процент брошенных корзин', formula: 'Корзин без оформления / Всего добавлений в корзину × 100%', desc: 'Метрика E-commerce → Воронка заказов. Средний показатель по рынку: 65–75%. Каждые -5% брошенных корзин = ощутимый рост выручки без увеличения трафика.' },
+        { name: 'Время до конверсии', formula: 'Среднее время от первого визита до оформления заказа', desc: 'Метрика → Конверсии → Время до конверсии. Если >7 дней — добавить ремаркетинг и nurturing-цепочку. Если <1 часа — аудитория «горячая», усилить первый экран.' },
       ]
     },
     {
@@ -705,7 +719,7 @@ const MATRIX = {
       ],
       tools: ['Unisender','SendPulse','amoCRM','Bitrix24','Яндекс.Аудитории','Mindbox'],
       metrics: [
-        { name: 'Retention Rate', formula: '(Клиентов на конец − Новых) / Клиентов на начало × 100%', desc: 'Норма для e-commerce: 15–30%. Считаем по когортам помесячно.' },
+        { name: 'Retention Rate', formula: '(Клиентов на конец − Новых) / Клиентов на начало × 100%', desc: 'Норма для e-commerce: 20–40%. Считаем по когортам помесячно.' },
         { name: 'LTV (Lifetime Value)', formula: 'Средний чек × Частота покупок × Срок жизни клиента', desc: 'Сравниваем с CAC: LTV/CAC ≥ 3 — здоровая юнит-экономика.' },
         { name: 'NPS', formula: 'Промоутеры% − Критики%', desc: 'Опрос: «Насколько вероятно, что вы порекомендуете нас?» Шкала 0–10. ≥ 50 — отлично.' },
         { name: 'Частота повторных покупок (Purchase Frequency)', formula: 'Кол-во заказов за период / Кол-во уникальных покупателей за тот же период', desc: 'CRM или E-commerce отчёт Метрики. Отслеживаем в динамике: рост PF без роста базы = программа удержания работает. Сегментируем: топ-20% клиентов дают 60–80% выручки.' },
@@ -989,6 +1003,22 @@ function updateProgress() {
   document.getElementById('psBar').style.width = total ? (done/total*100)+'%' : '0%';
   document.getElementById('psCount').textContent = `${done} / ${total} задач`;
   updateFunnelViz();
+}
+
+// ═══════════════════════════════════════════════
+// RESET
+// ═══════════════════════════════════════════════
+function resetAll() {
+  if (!confirm('Сбросить весь прогресс? Все отметки и заметки будут удалены.')) return;
+  localStorage.removeItem('ws_state');
+  cellStates = {};
+  // uncheck all task items in open modal if any
+  document.querySelectorAll('.task-item').forEach(el => el.classList.remove('checked'));
+  // remove done/notes marks from table cells
+  document.querySelectorAll('.click-cell').forEach(el => {
+    el.classList.remove('done', 'has-notes');
+  });
+  updateProgress();
 }
 
 // Keyboard close
