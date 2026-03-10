@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Веб-стратегия и анализ эффективности сайта</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Geologica:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --c0: #0d1b2a;
+  --c1: #1b3a5c;
+  --c2: #1e6091;
+  --c3: #2980b9;
+  --c4: #5dade2;
+  --c5: #aed6f1;
+  --acc: #f0a500;
+  --acc2: #e74c3c;
+  --green: #27ae60;
+  --bg: #f4f7fb;
+  --card: #ffffff;
+  --text: #1a2533;
+  --muted: #6b7a8d;
+  --border: #d0dce8;
+  --radius: 8px;
+  --shadow: 0 2px 16px rgba(13,27,42,0.10);
+  --shadow-lg: 0 8px 40px rgba(13,27,42,0.18);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Geologica', sans-serif; background: var(--bg); color: var(--text); }
+
+/* ── HEADER ── */
+header {
+  background: linear-gradient(120deg, var(--c0) 0%, var(--c1) 50%, var(--c2) 100%);
+  padding: 36px 48px 28px;
+  position: relative; overflow: hidden;
+}
+header::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    -55deg,
+    transparent, transparent 40px,
+    rgba(255,255,255,0.02) 40px, rgba(255,255,255,0.02) 80px
+  );
+}
+header h1 {
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 2.6rem; letter-spacing: 2px;
+  color: #fff; position: relative;
+}
+header p { color: var(--c5); font-size: 0.9rem; margin-top: 4px; position: relative; font-weight: 300; }
+.header-stages {
+  display: flex; gap: 8px; margin-top: 20px; position: relative; flex-wrap: wrap;
+}
+.stage-pill {
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 30px;
+  padding: 5px 16px;
+  font-size: 0.78rem; font-weight: 600;
+  color: rgba(255,255,255,0.85);
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+.stage-pill:hover, .stage-pill.active {
+  background: var(--acc); border-color: var(--acc); color: #fff;
+}
+
+/* ── MAIN LAYOUT ── */
+.wrap { max-width: 1400px; margin: 0 auto; padding: 32px 20px 80px; }
+
+/* ── MATRIX TABLE ── */
+.matrix-wrap { overflow-x: auto; }
+table.matrix {
+  width: 100%; border-collapse: separate; border-spacing: 0;
+  background: var(--card);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  min-width: 900px;
+}
+table.matrix th, table.matrix td { vertical-align: top; }
+
+/* Row label column */
+.row-label {
+  background: var(--c1);
+  color: #fff;
+  font-size: 0.78rem; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  padding: 12px 14px;
+  white-space: nowrap;
+  width: 120px; min-width: 110px;
+  text-align: right;
+  border-right: 3px solid rgba(255,255,255,0.12);
+}
+.row-label.dark { background: var(--c0); }
+.row-label.mid  { background: var(--c2); }
+
+/* Stage header row */
+.stage-header {
+  background: var(--c3);
+  color: #fff;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: 1.1rem; letter-spacing: 1px;
+  text-align: center;
+  padding: 10px 8px;
+  border-right: 2px solid rgba(255,255,255,0.15);
+  position: relative;
+}
+.stage-header::after {
+  content: '▶';
+  position: absolute; right: -8px; top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.7rem; color: rgba(255,255,255,0.4);
+  z-index: 1;
+}
+.stage-header:last-child::after { display: none; }
+
+/* Behavior row */
+.behav-cell {
+  background: #e8f1f8;
+  font-style: italic; font-size: 0.82rem; font-weight: 500;
+  color: var(--c1); text-align: center; padding: 9px 10px;
+  border-right: 1px solid var(--border);
+}
+
+/* Strategy row */
+.strat-cell {
+  background: var(--c2);
+  color: #fff; text-align: center;
+  font-size: 0.88rem; font-weight: 600;
+  padding: 10px 8px;
+  border-right: 1px solid rgba(255,255,255,0.15);
+}
+
+/* Clickable cells */
+.click-cell {
+  padding: 10px 10px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.18s, transform 0.15s, box-shadow 0.15s;
+  position: relative;
+  min-height: 60px;
+}
+.click-cell:hover {
+  background: #e4f0fb !important;
+  transform: scale(1.02);
+  box-shadow: inset 0 0 0 2px var(--c3);
+  z-index: 2;
+}
+.click-cell.has-notes::after {
+  content: '✏️';
+  position: absolute; top: 4px; right: 5px;
+  font-size: 0.7rem; opacity: 0.6;
+}
+.click-cell.done { background: #e8f8f0 !important; }
+.click-cell.done::before {
+  content: '✓';
+  position: absolute; top: 4px; left: 5px;
+  font-size: 0.75rem; color: var(--green); font-weight: 700;
+}
+
+/* Cell content */
+.cell-title {
+  font-size: 0.80rem; font-weight: 600; color: var(--c1); line-height: 1.35;
+  display: block;
+}
+.cell-sub {
+  font-size: 0.72rem; color: var(--muted); margin-top: 3px; line-height: 1.3;
+  display: block;
+}
+.cell-kpi-badge {
+  display: inline-block; margin-top: 5px;
+  background: var(--c5); color: var(--c1);
+  border-radius: 4px; padding: 1px 6px;
+  font-size: 0.68rem; font-weight: 600;
+}
+
+/* Colspan source row */
+.source-wide {
+  background: #f0f5fb; color: var(--c1);
+  font-size: 0.78rem; text-align: center;
+  padding: 7px 10px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+/* ── MODAL ── */
+.overlay {
+  position: fixed; inset: 0;
+  background: rgba(13,27,42,0.65);
+  backdrop-filter: blur(4px);
+  z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.25s;
+}
+.overlay.open { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: var(--card);
+  border-radius: 14px;
+  box-shadow: var(--shadow-lg);
+  width: 100%; max-width: 680px;
+  max-height: 90vh; overflow-y: auto;
+  transform: translateY(24px) scale(0.97);
+  transition: transform 0.25s;
+}
+.overlay.open .modal { transform: translateY(0) scale(1); }
+
+.modal-header {
+  background: linear-gradient(90deg, var(--c1), var(--c2));
+  padding: 20px 24px;
+  border-radius: 14px 14px 0 0;
+  display: flex; justify-content: space-between; align-items: flex-start;
+}
+.modal-stage-tag {
+  font-size: 0.72rem; font-weight: 600; letter-spacing: 0.5px;
+  color: var(--c5); text-transform: uppercase; margin-bottom: 4px;
+}
+.modal-title { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: #fff; letter-spacing: 1px; }
+.modal-close {
+  background: rgba(255,255,255,0.15); border: none; color: #fff;
+  width: 32px; height: 32px; border-radius: 50%;
+  font-size: 1.1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s; flex-shrink: 0; margin-left: 16px;
+}
+.modal-close:hover { background: rgba(255,255,255,0.3); }
+
+.modal-body { padding: 24px; }
+
+.modal-section { margin-bottom: 22px; }
+.modal-section-title {
+  font-size: 0.72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: 0.8px; color: var(--muted);
+  border-bottom: 2px solid var(--border);
+  padding-bottom: 5px; margin-bottom: 12px;
+}
+
+/* Goal */
+.goal-box {
+  background: linear-gradient(90deg, #e8f4fd, #f0f8ff);
+  border-left: 4px solid var(--c3);
+  border-radius: 6px; padding: 10px 14px;
+  font-size: 0.88rem; color: var(--c1); font-weight: 500; line-height: 1.5;
+}
+
+/* Tasks list */
+.task-list { display: flex; flex-direction: column; gap: 7px; }
+.task-item {
+  display: flex; align-items: flex-start; gap: 10px;
+  background: #f8fafc; border-radius: 7px;
+  padding: 8px 12px; cursor: pointer;
+  border: 1.5px solid transparent;
+  transition: border-color 0.15s, background 0.15s;
+}
+.task-item:hover { border-color: var(--c4); background: #edf5fc; }
+.task-item.checked { background: #edfaf3; border-color: var(--green); }
+.task-cb {
+  width: 18px; height: 18px; min-width: 18px;
+  border: 2px solid var(--border); border-radius: 4px;
+  display: flex; align-items: center; justify-content: center;
+  margin-top: 1px; background: #fff;
+  transition: background 0.15s, border-color 0.15s;
+}
+.task-item.checked .task-cb { background: var(--green); border-color: var(--green); }
+.task-cb svg { display: none; }
+.task-item.checked .task-cb svg { display: block; }
+.task-text { font-size: 0.84rem; line-height: 1.45; color: var(--text); }
+.task-item.checked .task-text { color: #8aaa96; text-decoration: line-through; }
+
+/* Tools */
+.tools-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.tool-tag {
+  background: var(--c1); color: #fff;
+  border-radius: 20px; padding: 4px 12px;
+  font-size: 0.75rem; font-weight: 500;
+}
+
+/* Metrics */
+.metrics-list { display: flex; flex-direction: column; gap: 10px; }
+.metric-item {
+  background: #f8fafc; border-radius: 8px;
+  padding: 10px 14px; border-left: 3px solid var(--acc);
+}
+.metric-name { font-size: 0.82rem; font-weight: 700; color: var(--c1); }
+.metric-formula {
+  font-size: 0.78rem; color: var(--c2); font-family: monospace;
+  background: #e8f1f8; border-radius: 4px; padding: 2px 7px;
+  display: inline-block; margin: 3px 0;
+}
+.metric-desc { font-size: 0.78rem; color: var(--muted); line-height: 1.4; }
+
+/* Notes */
+.notes-area {
+  width: 100%; border: 1.5px solid var(--border); border-radius: 8px;
+  padding: 10px 13px; font-size: 0.84rem; font-family: 'Geologica', sans-serif;
+  color: var(--text); background: #f8fafc; resize: vertical; min-height: 80px;
+  outline: none; transition: border-color 0.2s;
+}
+.notes-area:focus { border-color: var(--c3); background: #fff; }
+
+/* Status toggle */
+.status-row { display: flex; align-items: center; gap: 14px; margin-top: 16px; }
+.status-btn {
+  padding: 8px 20px; border-radius: 30px; border: none; cursor: pointer;
+  font-family: 'Geologica', sans-serif; font-size: 0.82rem; font-weight: 600;
+  transition: background 0.2s, transform 0.15s;
+}
+.status-btn.mark-done { background: var(--green); color: #fff; }
+.status-btn.mark-done:hover { background: #219a52; transform: scale(1.03); }
+.status-btn.mark-undone { background: #eee; color: var(--muted); }
+.status-btn.mark-undone:hover { background: #ddd; }
+.save-note-btn { background: var(--c3); color: #fff; }
+.save-note-btn:hover { background: var(--c2); }
+
+/* Progress strip */
+.progress-strip {
+  background: var(--card); border-radius: 10px;
+  box-shadow: var(--shadow);
+  padding: 16px 24px; margin-bottom: 24px;
+  display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+}
+.ps-label { font-size: 0.82rem; font-weight: 600; color: var(--muted); white-space: nowrap; }
+.ps-bar-wrap { flex: 1; min-width: 180px; background: var(--border); border-radius: 10px; height: 8px; }
+.ps-bar { height: 100%; border-radius: 10px; background: linear-gradient(90deg, var(--c3), var(--acc)); transition: width 0.4s; width: 0%; }
+.ps-count { font-family: 'Bebas Neue', sans-serif; font-size: 1.4rem; color: var(--c2); white-space: nowrap; }
+
+@media(max-width:700px) {
+  header { padding: 24px 20px 20px; }
+  header h1 { font-size: 1.8rem; }
+  .wrap { padding: 16px 10px 60px; }
+}
+
+/* Row separator */
+tr.sep td, tr.sep th { border-top: 3px solid var(--c1); }
+
+/* Animate rows in */
+@keyframes fadeUp { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:none; } }
+tbody tr { animation: fadeUp 0.4s ease both; }
+tbody tr:nth-child(1) { animation-delay: 0.05s; }
+tbody tr:nth-child(2) { animation-delay: 0.10s; }
+tbody tr:nth-child(3) { animation-delay: 0.15s; }
+tbody tr:nth-child(4) { animation-delay: 0.20s; }
+tbody tr:nth-child(5) { animation-delay: 0.25s; }
+tbody tr:nth-child(6) { animation-delay: 0.30s; }
+tbody tr:nth-child(7) { animation-delay: 0.35s; }
+tbody tr:nth-child(8) { animation-delay: 0.40s; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Веб-стратегия и анализ эффективности сайта</h1>
+  <p>Кликайте по ячейкам — план работ, инструменты, метрики и заметки для каждого этапа воронки</p>
+  <div class="header-stages">
+    <span class="stage-pill">1 · Осведомлённость</span>
+    <span class="stage-pill">2 · Знакомство</span>
+    <span class="stage-pill">3 · Симпатия</span>
+    <span class="stage-pill">4 · Рассмотрение</span>
+    <span class="stage-pill">5 · Покупка</span>
+    <span class="stage-pill">6 · Владение</span>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="progress-strip">
+    <span class="ps-label">Прогресс выполнения задач:</span>
+    <div class="ps-bar-wrap"><div class="ps-bar" id="psBar"></div></div>
+    <span class="ps-count" id="psCount">0 / 0</span>
+  </div>
+
+  <div class="matrix-wrap">
+  <table class="matrix" id="matrixTable">
+    <thead>
+      <tr>
+        <th class="row-label dark" style="text-align:center;vertical-align:middle;">Бренд-Воронка</th>
+        <th class="stage-header">Осведомлённость</th>
+        <th class="stage-header">Знакомство</th>
+        <th class="stage-header">Симпатия</th>
+        <th class="stage-header">Рассмотрение</th>
+        <th class="stage-header">Покупка</th>
+        <th class="stage-header">Владение</th>
+      </tr>
+    </thead>
+    <tbody id="matrixBody"></tbody>
+  </table>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="closeModalOnBg(event)">
+  <div class="modal" id="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-stage-tag" id="mStageTag"></div>
+        <div class="modal-title" id="mTitle"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-section">
+        <div class="modal-section-title">🎯 Цель этапа</div>
+        <div class="goal-box" id="mGoal"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">📋 План работ / задачи</div>
+        <div class="task-list" id="mTasks"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">🔧 Инструменты</div>
+        <div class="tools-row" id="mTools"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">📊 Метрики и как считать</div>
+        <div class="metrics-list" id="mMetrics"></div>
+      </div>
+      <div class="modal-section">
+        <div class="modal-section-title">✏️ Мои заметки</div>
+        <textarea class="notes-area" id="mNotes" placeholder="Добавьте заметки, ссылки, ответственных..."></textarea>
+      </div>
+      <div class="status-row">
+        <button class="status-btn mark-done" id="mDoneBtn" onclick="toggleDone()">✓ Отметить выполненным</button>
+        <button class="status-btn save-note-btn" onclick="saveNote()">💾 Сохранить заметку</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════
+// DATA
+// ═══════════════════════════════════════════════
+const STAGES = ['Осведомлённость','Знакомство','Симпатия','Рассмотрение','Покупка','Владение'];
+
+const BEHAVIORS = [
+  'Формирование мнения',
+  'Формирование мнения',
+  'Исследование и выбор вариантов',
+  'Действие',
+  'Покупка',
+  'Повторная покупка'
+];
+
+const STRATEGIES = [
+  'Привлечь внимание',
+  'Связаться',
+  'Внушить и проинформировать',
+  'Убедить',
+  'Конвертировать',
+  'Удерживать'
+];
+
+// rowKey → [s0..s5]  (null = merged/skip)
+const MATRIX = {
+  goals: [
+    {
+      title: 'Увеличение объёма и качества посетителей',
+      kpi: 'Уникальные посетители',
+      goal: 'Максимизировать охват целевой аудитории через все доступные каналы трафика.',
+      tasks: ['Настроить UTM-разметку для всех каналов','Провести аудит текущих источников трафика','Составить медиаплан по каналам','Запустить SEO-аудит и устранить критические ошибки','Подключить Яндекс.Директ и Google Ads','Настроить цели в Метрике/Analytics'],
+      tools: ['Яндекс.Метрика','Google Analytics','Яндекс.Директ','Google Ads','Яндекс.Вебмастер','Search Console'],
+      metrics: [
+        { name: 'Уникальные посетители', formula: 'Users за период', desc: 'Яндекс.Метрика → Аудитория → Посетители. Смотрим динамику WoW/MoM.' },
+        { name: 'Стоимость привлечения посетителя', formula: 'Бюджет / Кол-во посетителей', desc: 'Считаем по каждому каналу отдельно, сравниваем для перераспределения бюджета.' },
+        { name: 'Доля нового трафика', formula: 'Новые / Все × 100%', desc: 'Нормальный показатель — 60–80% новых для growth-стадии.' },
+      ]
+    },
+    {
+      title: 'Оптимизация функциональности и юзабилити',
+      kpi: 'Индекс вовлечённости сайта',
+      goal: 'Снизить барьеры первого контакта: сайт должен мгновенно отвечать на вопрос "что вы делаете и почему вам стоит доверять".',
+      tasks: ['Провести юзабилити-тестирование (30+ пользователей)','Оптимизировать скорость загрузки (PageSpeed ≥ 60)','Проверить корректность отображения на мобильных','Улучшить первый экран: чёткий заголовок + CTA','Добавить чат или форму обратной связи','Настроить Вебвизор для анализа поведения'],
+      tools: ['Google PageSpeed','Яндекс.Метрика Вебвизор','Hotjar','GTmetrix','Screaming Frog'],
+      metrics: [
+        { name: 'Показатель отказов', formula: 'Отказы / Визиты × 100%', desc: 'Норма зависит от типа сайта: лендинг — до 30%, многостраничный — до 15%.' },
+        { name: 'Глубина просмотра', formula: 'Σ страниц / Визиты', desc: 'Рост глубины = пользователь исследует сайт. Целевой показатель: ≥ 2 стр.' },
+        { name: 'Время на сайте', formula: 'Среднее время сессии', desc: 'Метрика → Поведение → Время на сайте. Норма для B2B: 2–4 минуты.' },
+      ]
+    },
+    {
+      title: 'Оптимизация контента и послания',
+      kpi: 'Индекс контента по вовлечённости',
+      goal: 'Формировать доверие через полезный контент, закрывать возражения и строить экспертный образ.',
+      tasks: ['Провести аудит существующего контента','Составить контент-план на 3 месяца','Написать продающие тексты для ключевых страниц','Добавить кейсы, отзывы, сертификаты','Настроить A/B тест заголовков','Оптимизировать мета-теги и структуру страниц'],
+      tools: ['Яндекс.Вордстат','Serpstat','Главред','Тургенев','Яндекс.Метрика','Canva / Figma'],
+      metrics: [
+        { name: 'Процент прочтения страницы', formula: 'Scroll Depth ≥ 50% / Просмотры страницы', desc: 'Настраивается через Яндекс.Метрика → Цели → JavaScript.' },
+        { name: 'CTR в органической выдаче', formula: 'Клики / Показы × 100%', desc: 'Search Console / Яндекс.Вебмастер. Норма: 1.5–3% для информационных запросов.' },
+        { name: 'Вовлечённость в контент', formula: 'Время × Скролл × Клики (составной)', desc: 'Вебвизор: смотрим карту кликов и скролла, находим точки потери внимания.' },
+      ]
+    },
+    {
+      title: 'Увеличение продаж',
+      kpi: 'Продукты в корзине',
+      goal: 'Конвертировать интерес в намерение купить: убрать сомнения, показать ценность, упростить выбор.',
+      tasks: ['Настроить воронку в CRM','Добавить социальные доказательства (отзывы, рейтинги)','Внедрить сравнение продуктов/тарифов','Настроить ретаргетинг на «тёплую» аудиторию','Провести анализ конкурентов по УТП','Добавить FAQ на страницы продуктов'],
+      tools: ['Яндекс.Директ Ретаргетинг','amoCRM','RetailRocket','Calltouch','Яндекс.Метрика E-commerce'],
+      metrics: [
+        { name: 'Добавления в корзину', formula: 'Кол-во кликов "Добавить в корзину"', desc: 'E-commerce цель в Метрике. Показывает интерес без финального обязательства.' },
+        { name: 'Выпадения из воронки', formula: '1 − (Следующий шаг / Текущий шаг)', desc: 'Метрика → Воронки. Находим шаг с наибольшим оттоком — туда идёт приоритет работы.' },
+        { name: 'Средний чек', formula: 'Выручка / Кол-во заказов', desc: 'Считаем в разрезе источника трафика для понимания качества аудитории.' },
+      ]
+    },
+    {
+      title: 'Оптимизация расчётов за услуги/продукты',
+      kpi: 'Степень конверсии',
+      goal: 'Максимизировать конверсию на финальном шаге: оплата должна быть быстрой, безопасной и без трений.',
+      tasks: ['Подключить несколько способов оплаты','Настроить SSL и отображение знаков безопасности','Упростить форму заказа (минимум полей)','Настроить брошенные корзины → автоматическое письмо','Протестировать checkout на мобильных','Настроить отслеживание транзакций (E-commerce)'],
+      tools: ['Яндекс.Касса','Stripe','Robokassa','Calltouch','Google Tag Manager','Метрика E-commerce'],
+      metrics: [
+        { name: 'Конверсия в покупку', formula: 'Покупки / Уникальные посетители × 100%', desc: 'Основная метрика. Средняя по рунету — 1–3% для интернет-магазинов.' },
+        { name: 'Конверсия checkout', formula: 'Завершённые заказы / Начатые оформления × 100%', desc: 'Норма ≥ 60%. Ниже — проблема с формой или способами оплаты.' },
+        { name: 'Revenue per Visitor', formula: 'Выручка / Уникальные посетители', desc: 'Позволяет сравнивать периоды и каналы без привязки к объёму трафика.' },
+      ]
+    },
+    {
+      title: 'Увеличение числа покупателей, совершивших повторную покупку',
+      kpi: 'Удерживаемые посетители',
+      goal: 'Превратить покупателей в лояльных клиентов: LTV > CAC, NPS растёт, сарафанное радио работает.',
+      tasks: ['Настроить email-цепочку onboarding','Запустить программу лояльности / скидки постоянным','Настроить CRM-сегментацию по RFM','Проводить NPS-опросы каждые 3 месяца','Настроить ретаргетинг на существующих клиентов','Вести базу знаний / FAQ для самообслуживания'],
+      tools: ['Unisender','SendPulse','amoCRM','Bitrix24','Яндекс.Аудитории','Mindbox'],
+      metrics: [
+        { name: 'Retention Rate', formula: '(Клиентов на конец − Новых) / Клиентов на начало × 100%', desc: 'Норма для e-commerce: 20–40%. Считаем по когортам помесячно.' },
+        { name: 'LTV (Lifetime Value)', formula: 'Средний чек × Частота покупок × Срок жизни клиента', desc: 'Сравниваем с CAC: LTV/CAC ≥ 3 — здоровая юнит-экономика.' },
+        { name: 'NPS', formula: 'Промоутеры% − Критики%', desc: 'Опрос: «Насколько вероятно, что вы порекомендуете нас?» Шкала 0–10. ≥ 50 — отлично.' },
+      ]
+    },
+  ],
+  sources: [
+    // источники данных — строки с особой структурой
+    { row: 'sources1', cells: [
+      { title: 'Конкурентный анализ', sub: 'SEM / Медиа', span: 1 },
+      { title: 'Юзабилити-тестирование', sub: 'Исследование первичных намерений', span: 2 },
+      { title: 'Качественные исследования', sub: 'Анализ выпадений из воронки', span: 1 },
+      { title: 'Анализ выпадений из воронки', sub: 'CRM Данные', span: 1 },
+      { title: 'Обследование степени удовлетворённости', sub: 'CRM Данные', span: 1 },
+    ]},
+    { row: 'sources2', label: '', cells: [
+      { title: 'Анализ истории кликов', span: 6, wide: true }
+    ]}
+  ]
+};
+
+const CELL_DATA = MATRIX.goals;
+
+// ═══════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════
+let cellStates = {}; // key → { done: bool, tasks: {}, notes: '' }
+let currentKey = null;
+
+function getState(key) {
+  if (!cellStates[key]) cellStates[key] = { done: false, tasks: {}, notes: '' };
+  return cellStates[key];
+}
+
+function saveAll() {
+  try { localStorage.setItem('ws_state', JSON.stringify(cellStates)); } catch(e){}
+}
+
+function loadAll() {
+  try {
+    const s = JSON.parse(localStorage.getItem('ws_state') || '{}');
+    cellStates = s;
+  } catch(e) {}
+}
+
+// ═══════════════════════════════════════════════
+// BUILD TABLE
+// ═══════════════════════════════════════════════
+function buildTable() {
+  const tbody = document.getElementById('matrixBody');
+
+  // Row: Поведение покупателей
+  const rBehav = document.createElement('tr');
+  rBehav.innerHTML = `<th class="row-label mid">Поведение<br>покупателей</th>` +
+    BEHAVIORS.map(b => `<td class="behav-cell">${b}</td>`).join('');
+  tbody.appendChild(rBehav);
+
+  // Row: Веб-стратегия
+  const rStrat = document.createElement('tr');
+  rStrat.innerHTML = `<th class="row-label mid">Веб-Стратегия</th>` +
+    STRATEGIES.map(s => `<td class="strat-cell">${s}</td>`).join('');
+  tbody.appendChild(rStrat);
+
+  // Row: Параметры достижения цели
+  const rGoals = document.createElement('tr');
+  rGoals.classList.add('sep');
+  rGoals.innerHTML = `<th class="row-label dark">Параметры<br>достижения<br>цели</th>`;
+  CELL_DATA.forEach((d, i) => {
+    const key = `goal_${i}`;
+    const st = getState(key);
+    const td = document.createElement('td');
+    td.className = 'click-cell' + (st.done ? ' done' : '') + (st.notes ? ' has-notes' : '');
+    td.dataset.key = key;
+    td.innerHTML = `<span class="cell-title">${d.title}</span><span class="cell-kpi-badge">${d.kpi}</span>`;
+    td.addEventListener('click', () => openModal(key, i));
+    rGoals.appendChild(td);
+  });
+  tbody.appendChild(rGoals);
+
+  // Row: Источники данных — строка 1
+  const rSrc1 = document.createElement('tr');
+  rSrc1.innerHTML = `<th class="row-label dark" rowspan="2">Источники<br>данных</th>`;
+  const srcCells = [
+    { title: 'Конкурентный анализ', sub: 'SEM / Медиа', cols: 1 },
+    { title: 'Юзабилити-тестирование', sub: 'Исследование первичных намерений', cols: 2 },
+    { title: 'Анализ выпадений из воронки', sub: '', cols: 2 },
+    { title: 'Обследование степени удовлетворённости', sub: 'CRM Данные', cols: 1 },
+  ];
+  srcCells.forEach(c => {
+    const td = document.createElement('td');
+    td.className = 'source-wide';
+    if (c.cols > 1) td.colSpan = c.cols;
+    td.innerHTML = `<strong>${c.title}</strong>${c.sub ? '<br><small>' + c.sub + '</small>' : ''}`;
+    rSrc1.appendChild(td);
+  });
+  tbody.appendChild(rSrc1);
+
+  // Row: Источники данных — строка 2 (широкая)
+  const rSrc2 = document.createElement('tr');
+  const tdWide = document.createElement('td');
+  tdWide.colSpan = 6;
+  tdWide.className = 'source-wide';
+  tdWide.style.textAlign = 'center';
+  tdWide.style.fontWeight = '600';
+  tdWide.innerHTML = 'Анализ истории кликов';
+  rSrc2.appendChild(tdWide);
+  tbody.appendChild(rSrc2);
+
+  // Row: КПЭ
+  const rKpi = document.createElement('tr');
+  rKpi.classList.add('sep');
+  rKpi.innerHTML = `<th class="row-label dark">Ключевые<br>показатели<br>эффективности</th>`;
+  CELL_DATA.forEach((d, i) => {
+    const td = document.createElement('td');
+    td.className = 'click-cell';
+    td.style.background = '#e8f4fd';
+    td.style.cursor = 'pointer';
+    td.innerHTML = `<span class="cell-title" style="color:var(--c2)">${d.kpi}</span>`;
+    td.addEventListener('click', () => openModal(`goal_${i}`, i));
+    rKpi.appendChild(td);
+  });
+  tbody.appendChild(rKpi);
+}
+
+// ═══════════════════════════════════════════════
+// MODAL
+// ═══════════════════════════════════════════════
+function openModal(key, idx) {
+  currentKey = key;
+  const d = CELL_DATA[idx];
+  const st = getState(key);
+
+  document.getElementById('mStageTag').textContent = `Этап ${idx+1} · ${STAGES[idx]}`;
+  document.getElementById('mTitle').textContent = d.title;
+  document.getElementById('mGoal').textContent = d.goal;
+
+  // Tasks
+  const tl = document.getElementById('mTasks');
+  tl.innerHTML = '';
+  d.tasks.forEach((t, ti) => {
+    const checked = st.tasks[ti] || false;
+    const div = document.createElement('div');
+    div.className = 'task-item' + (checked ? ' checked' : '');
+    div.innerHTML = `<div class="task-cb"><svg width="11" height="9" viewBox="0 0 11 9" fill="none"><path d="M1 4L4 7.5L10 1" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div><span class="task-text">${t}</span>`;
+    div.addEventListener('click', () => {
+      st.tasks[ti] = !st.tasks[ti];
+      div.classList.toggle('checked', st.tasks[ti]);
+      saveAll();
+      updateProgress();
+    });
+    tl.appendChild(div);
+  });
+
+  // Tools
+  document.getElementById('mTools').innerHTML = d.tools.map(t => `<span class="tool-tag">${t}</span>`).join('');
+
+  // Metrics
+  const ml = document.getElementById('mMetrics');
+  ml.innerHTML = d.metrics.map(m => `
+    <div class="metric-item">
+      <div class="metric-name">${m.name}</div>
+      <div class="metric-formula">${m.formula}</div>
+      <div class="metric-desc">${m.desc}</div>
+    </div>
+  `).join('');
+
+  // Notes
+  document.getElementById('mNotes').value = st.notes || '';
+
+  // Done btn
+  const btn = document.getElementById('mDoneBtn');
+  btn.textContent = st.done ? '↩ Снять отметку' : '✓ Отметить выполненным';
+  btn.className = 'status-btn ' + (st.done ? 'mark-undone' : 'mark-done');
+
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal() {
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow = '';
+  currentKey = null;
+}
+
+function closeModalOnBg(e) {
+  if (e.target === document.getElementById('overlay')) closeModal();
+}
+
+function toggleDone() {
+  if (!currentKey) return;
+  const st = getState(currentKey);
+  st.done = !st.done;
+  saveAll();
+  // update table cell
+  const td = document.querySelector(`td[data-key="${currentKey}"]`);
+  if (td) td.classList.toggle('done', st.done);
+  const btn = document.getElementById('mDoneBtn');
+  btn.textContent = st.done ? '↩ Снять отметку' : '✓ Отметить выполненным';
+  btn.className = 'status-btn ' + (st.done ? 'mark-undone' : 'mark-done');
+  updateProgress();
+}
+
+function saveNote() {
+  if (!currentKey) return;
+  const st = getState(currentKey);
+  st.notes = document.getElementById('mNotes').value;
+  saveAll();
+  const td = document.querySelector(`td[data-key="${currentKey}"]`);
+  if (td) td.classList.toggle('has-notes', !!st.notes);
+  const btn = document.querySelector('.save-note-btn');
+  const orig = btn.textContent;
+  btn.textContent = '✓ Сохранено!';
+  setTimeout(() => btn.textContent = orig, 1500);
+}
+
+// ═══════════════════════════════════════════════
+// PROGRESS
+// ═══════════════════════════════════════════════
+function updateProgress() {
+  let total = 0, done = 0;
+  CELL_DATA.forEach((d, i) => {
+    const st = getState(`goal_${i}`);
+    d.tasks.forEach((_, ti) => {
+      total++;
+      if (st.tasks[ti]) done++;
+    });
+  });
+  document.getElementById('psBar').style.width = total ? (done/total*100)+'%' : '0%';
+  document.getElementById('psCount').textContent = `${done} / ${total} задач`;
+}
+
+// Keyboard close
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+// ═══════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════
+loadAll();
+buildTable();
+updateProgress();
+</script>
+</body>
+</html>
